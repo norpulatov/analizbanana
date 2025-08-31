@@ -6,7 +6,8 @@ from fastapi import FastAPI
 import uvicorn
 
 from src.config import settings
-from src.db import init_db
+from db import init_db
+
 from src.utils.logging import logger
 from src.utils.scheduler import self_ping_loop
 
