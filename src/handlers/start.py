@@ -1,14 +1,30 @@
-from aiogram import Router, F
-from aiogram.types import Message
-from src.keyboards import main_kb, phone_kb
-from src.texts import T
-from src.config import settings
+from aiogram import Router
+from aiogram.filters import CommandStart
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.db_utils import get_or_create_user
 
 router = Router()
 
-@router.message(F.text == "/start")
-async def start(m: Message):
-    lang = settings.default_lang
-    await m.answer(T[lang]["start"].format(name=m.from_user.full_name), reply_markup=main_kb())
-    if not m.contact:
-        await m.answer(T[lang]["ask_phone"], reply_markup=phone_kb())
+@router.message(CommandStart())
+async def cmd_start(message: Message, session: AsyncSession):
+    # userni bazaga qo‘shish yoki olish
+    await get_or_create_user(
+        session,
+        message.from_user.id,
+        name=message.from_user.full_name,
+        lang="uz"
+    )
+
+    await message.answer(
+        f"Assalomu alaykum, {message.from_user.full_name}! Banalizga xush kelibsiz.\n\n"
+        "Ro'yxatdan o'tish uchun telefon raqamingizni yuboring.",
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text="📱 Telefon yuborish", request_contact=True)]
+            ],
+            resize_keyboard=True
+        )
+    )
+
