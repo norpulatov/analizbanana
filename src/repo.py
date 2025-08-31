@@ -15,9 +15,15 @@ async def get_or_create_user(session: AsyncSession, user_id: int, *, name: str |
 
 async def update_user_phone(session: AsyncSession, user_id: int, phone: str):
     res = await session.execute(select(User).where(User.id == user_id))
-    user = res.scalar_one()
-    user.phone = phone
+    user = res.scalar_one_or_none()
+    if not user:
+        # Agar user bo‘lmasa, uni yaratib qo‘yamiz
+        user = User(id=user_id, phone=phone)
+        session.add(user)
+    else:
+        user.phone = phone
     await session.commit()
+    return user
 
 async def add_entry(session: AsyncSession, user_id: int, type_: str, amount: float, category: str | None, note: str | None):
     e = Entry(user_id=user_id, type=type_, amount=amount, category=category, note=note)
